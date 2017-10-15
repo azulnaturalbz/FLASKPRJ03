@@ -50,7 +50,7 @@ def register():
     email = request.form.get("email")
     pw1 = request.form.get("password")
     pw2 = request.form.get("password2")
-    if not pw1 == pw2
+    if not pw1 == pw2:
         return redirect(url_for('home'))
     if DB.get_user(email):
         return redirect(url_for('home'))
