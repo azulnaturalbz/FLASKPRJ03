@@ -5,6 +5,7 @@ from flask import request
 from flask_login import LoginManager
 from flask_login import login_required
 from flask_login import login_user
+from flask_login import logout_user
 from USER import User
 from MOCKDBHELPER import MockDBHelper as DBHelper
 
@@ -44,7 +45,6 @@ def account():
 
 
 @app.route('/logout')
-@login_required
 def logout():
     logout_user()
     return redirect(url_for('home'))
