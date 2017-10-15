@@ -8,11 +8,13 @@ from flask_login import login_user
 from flask_login import logout_user
 from USER import User
 from MOCKDBHELPER import MockDBHelper as DBHelper
+from PASSWORDHELPER import PasswordHelper
 
 
 app = Flask(__name__)
 app.secret_key = 'tPXJY3X37Qybz4QykV+hOyUxVQeEXf1Ao2C8upz+fGQXKsM'
 DB = DBHelper()
+PH= PasswordHelper()
 login_manager = LoginManager(app)
 
 @app.route('/')
@@ -24,8 +26,8 @@ def home():
 def login():
     email = request.form.get("email")
     password = request.form.get("password")
-    user_password = DB.get_user(email)
-    if user_password in user_password == password:
+    stored_user = DB.get_user(email)
+    if stored_user in PH.validate_password(password, stored_user['salt'], stored_user['hashed']):
         user = User(email)
         login_user(user,remember=True)
         return redirect(url_for('account'))
