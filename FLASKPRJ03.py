@@ -33,9 +33,9 @@ def login():
     email = request.form.get("email")
     password = request.form.get("password")
     stored_user = DB.get_user(email)
-    if stored_user in PH.validate_password(password, stored_user['salt'], stored_user['hashed']):
+    if stored_user and PH.validate_password(password, stored_user['salt'], stored_user['hashed']):
         user = User(email)
-        login_user(user,remember=True)
+        login_user(user, remember=True)
         return redirect(url_for('account'))
     return home
 
