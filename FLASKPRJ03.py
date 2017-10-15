@@ -22,6 +22,12 @@ def home():
     return render_template('home.html')
 
 
+@app.route('/account')
+@login_required
+def account():
+    return "You are free"
+
+
 @app.route('/login',methods=['POST'])
 def login():
     email = request.form.get("email")
@@ -39,11 +45,21 @@ def load_user(user_id):
     if user_password:
         return User(user_id)
 
+@app.route('/register', methods=['POST'])
+def register():
+    email = request.form.get("email")
+    pw1 = request.form.get("password")
+    pw2 = request.form.get("password2")
+    if not pw1 == pw2
+        return redirect(url_for('home'))
+    if DB.get_user(email):
+        return redirect(url_for('home'))
+    salt = PH.get_salt()
+    hashed = PH.get_hash(pw1+salt)
+    DB.add_user(email, salt, hashed)
+    return redirect(url_for('home'))
 
-@app.route('/account')
-@login_required
-def account():
-    return "You are free"
+
 
 
 @app.route('/logout')
