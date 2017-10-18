@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="jumbotron">
+      <div class="container">
+        <h1 class="display-3">Account</h1>
+        <p>View account settings below</p>
+        <p><a class="btn btn-primary btn-lg" href="#" role="button">Learn more &raquo;</a></p>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <h2>Tables</h2>
+            <h2>Add a new table</h2>
+            <form action="/account/createtable" class="form-check-inline" method="post">
+                <input type="text" name="tablenumber" placeholder="Table number or name" class="form-control">
+                <input type="submit" value="create" class="btn btn-success">
+
+            </form>
+        </div>
+    </div>
+    </div> <!-- /container -->
+
+
+{% endblock %}
