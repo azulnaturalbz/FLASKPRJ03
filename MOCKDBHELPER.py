@@ -27,6 +27,12 @@ class MockDBHelper:
                 table["url"] = url
                 break
 
+    def delete_table(self, table_id):
+        for i, table in enumerate(MOCK_TABLES):
+            if table.get("_id") == table_id:
+                del MOCK_TABLES[i]
+                break
+
     def get_tables(self,owner_id):
         return MOCK_TABLES
 
