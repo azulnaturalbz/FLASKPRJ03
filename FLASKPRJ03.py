@@ -10,12 +10,14 @@ from flask_login import current_user
 from USER import User
 from MOCKDBHELPER import MockDBHelper as DBHelper
 from PASSWORDHELPER import PasswordHelper
+from BITlYHELPER import BitlyHelper
 import CONFIG
 
 app = Flask(__name__)
 app.secret_key = 'tPXJY3X37Qybz4QykV+hOyUxVQeEXf1Ao2C8upz+fGQXKsM'
 DB = DBHelper()
 PH= PasswordHelper()
+BH = BitlyHelper()
 login_manager = LoginManager(app)
 
 @app.route('/')
@@ -26,7 +28,8 @@ def home():
 @app.route('/account')
 @login_required
 def account():
-    return render_template('accounts.html')
+    tables = DB.get_tables(current_user.get_id())
+    return render_template('accounts.html',tables=tables)
 
 
 @app.route('/dashboard')
@@ -67,13 +70,22 @@ def register():
     DB.add_user(email, salt, hashed)
     return redirect(url_for('home'))
 
+
 @app.route("/account/createtable", methods=["POST"])
 @login_required
 def account_createtable():
     tablename = request.form.get("tablenumber")
     tableid = DB.add_table(tablename, current_user.get_id())
-    new_url = config.base_url + "newrequest/" + tableid
+    new_url = BH.shorten_url(CONFIG.base_url + "newrequest/" + tableid)
     DB.update_table(tableid, new_url)
+    return redirect(url_for('account'))
+
+
+@app.route("/account/deletetable")
+@login_required
+def account_deletetable():
+    tableid = request.args.get("tableid")
+    DB.delete_table(tableid)
     return redirect(url_for('account'))
 
 @app.route('/logout')
