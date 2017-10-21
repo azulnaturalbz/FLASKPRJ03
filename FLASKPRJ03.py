@@ -12,6 +12,7 @@ from MOCKDBHELPER import MockDBHelper as DBHelper
 from PASSWORDHELPER import PasswordHelper
 from BITlYHELPER import BitlyHelper
 import CONFIG
+import datetime
 
 app = Flask(__name__)
 app.secret_key = 'tPXJY3X37Qybz4QykV+hOyUxVQeEXf1Ao2C8upz+fGQXKsM'
@@ -35,8 +36,20 @@ def account():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    return render_template('dashboard.html')
+    now = datetime.datetime.now()
+    requests = DB.get_requests(current_user.get_id())
+    for  req in requests:
+        deltaseconds = (now - req['time']).seconds
+        req['wait_minutes'] = "{}.{}".format((deltaseconds/60),str(deltaseconds%60).zfill(2))
+    return render_template('dashboard.html',requests=requests)
 
+
+@app.route("/dashboard/resolve")
+@login_required
+def dashboard_resolve():
+    request_id = request.args.get("request_id")
+    DB.delete_request(request_id)
+    return redirect(url_for('dashboard'))
 
 
 @app.route('/login',methods=['POST'])
@@ -87,6 +100,12 @@ def account_deletetable():
     tableid = request.args.get("tableid")
     DB.delete_table(tableid)
     return redirect(url_for('account'))
+
+@app.route("/newrequest/<tid>")
+def new_request(tid):
+    DB.add_request(tid,datetime.datetime.now())
+    return "Your request will be attended shortly"
+
 
 @app.route('/logout')
 def logout():
