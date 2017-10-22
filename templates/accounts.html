@@ -32,8 +32,18 @@
             </table>
             <h2>Add a new table</h2>
             <form action="/account/createtable" class="form-check-inline" method="post">
-                <input type="text" name="tablenumber" placeholder="Table number or name" class="form-control">
-                <input type="submit" value="create" class="btn btn-success">
+                <div class="form-group">
+                    {% if createtableform.table_number.errors %}
+                    <ul class="alert-danger">
+                        {% for error in createtableform.table_number.errors  %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                {{ createtableform.csrf_token }}
+                {{ createtableform.table_number(placeholder="Table number or name", class="form-control") }}
+                {{ createtableform.submit(value="create",class="btn btn-success") }}
+                </div>
 
             </form>
         </div>

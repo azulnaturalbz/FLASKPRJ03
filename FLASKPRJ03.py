@@ -9,6 +9,8 @@ from flask_login import logout_user
 from flask_login import current_user
 from USER import User
 from FORMS import RegistrationForm
+from FORMS import LoginForm
+from FORMS import CreateTableForm
 from MOCKDBHELPER import MockDBHelper as DBHelper
 from PASSWORDHELPER import PasswordHelper
 from BITlYHELPER import BitlyHelper
@@ -25,14 +27,14 @@ login_manager = LoginManager(app)
 @app.route('/')
 def home():
     registrationform = RegistrationForm()
-    return render_template('home.html',registrationform=registrationform)
+    return render_template('home.html',registrationform=registrationform,loginform=LoginForm())
 
 
 @app.route('/account')
 @login_required
 def account():
     tables = DB.get_tables(current_user.get_id())
-    return render_template('accounts.html',tables=tables)
+    return render_template('accounts.html',tables=tables,createtableform=CreateTableForm())
 
 
 @app.route('/dashboard')
@@ -56,14 +58,15 @@ def dashboard_resolve():
 
 @app.route('/login',methods=['POST'])
 def login():
-    email = request.form.get("email")
-    password = request.form.get("password")
-    stored_user = DB.get_user(email)
-    if stored_user and PH.validate_password(password, stored_user['salt'], stored_user['hashed']):
-        user = User(email)
-        login_user(user, remember=True)
-        return redirect(url_for('account'))
-    return home
+    form = LoginForm(request.form)
+    if form.validate():
+        stored_user = DB.get_user(form.loginemail.data)
+        if stored_user and PH.validate_password(form.loginepassword.data,stored_user['salt'],stored_user['hashed']):
+            user = User(form.loginemail.data)
+            login_user(user,remember=True)
+            return redirect(url_for('account'))
+        form.loginemail.errors.append("Email or password invalid")
+    return render_template("home.html",loginform = form, registrationform=RegistrationForm())
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -77,22 +80,25 @@ def register():
     if form.validate():
         if DB.get_user(form.email.data):
             form.email.errors.append("Email already taken please try again")
-            return render_template('home.html',regiistrationform=form)
+            return render_template('home.html',registrationform=form,loginform=LoginForm())
         salt = PH.get_salt()
         hashed = PH.get_hash(form.password2.data + salt)
         DB.add_user(form.email.data,salt,hashed)
-        return url_for('home')
-    return render_template('home.html',registrationform=form)
+        return render_template('home.html', registrationform=form,loginform=LoginForm(),
+                               onloadmessage="Registation Successful you can now login")
+    return render_template('home.html',registrationform=form,loginform=LoginForm())
 
 
 @app.route("/account/createtable", methods=["POST"])
 @login_required
 def account_createtable():
-    tablename = request.form.get("tablenumber")
-    tableid = DB.add_table(tablename, current_user.get_id())
-    new_url = BH.shorten_url(CONFIG.base_url + "newrequest/" + tableid)
-    DB.update_table(tableid, new_url)
-    return redirect(url_for('account'))
+    form = CreateTableForm(request.form)
+    if form.validate():
+        tableid = DB.add_table(form.table_number.data,current_user.get_id())
+        new_url = BH.shorten_url(CONFIG.base_url + "newrequest/" + tableid)
+        DB.update_table(tableid, new_url)
+        return redirect(url_for('account'))
+    return render_template("accounts.html",createtableform=form,tables=DB.get_table(current_user.get_id()))
 
 
 @app.route("/account/deletetable")

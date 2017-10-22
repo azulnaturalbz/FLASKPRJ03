@@ -3,6 +3,7 @@ from wtforms import PasswordField
 from wtforms import SubmitField
 from wtforms.fields.html5 import EmailField
 from wtforms import validators
+from wtforms import TextField
 
 
 class RegistrationForm(Form):
@@ -13,3 +14,18 @@ class RegistrationForm(Form):
     password2 = PasswordField('password2',validators=[validators.DataRequired(),
                                                       validators.EqualTo('password',message="Passwords must match")])
     submit = SubmitField('submit',[validators.DataRequired()])
+
+
+class LoginForm(Form):
+    loginemail = EmailField('email',validators=[validators.DataRequired(),
+                                           validators.Email(message="Please enter an email")])
+    loginepassword = PasswordField('password',validators=[validators.DataRequired(message="Password field required")])
+
+    submit = SubmitField('submit',[validators.DataRequired()])
+
+class CreateTableForm(Form):
+    table_number = TextField('tablenumber',validators=[validators.DataRequired()])
+
+    submit = SubmitField('createtablesubmit',validators=[validators.DataRequired()])
+
+
