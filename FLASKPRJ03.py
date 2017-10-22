@@ -8,6 +8,7 @@ from flask_login import login_user
 from flask_login import logout_user
 from flask_login import current_user
 from USER import User
+from FORMS import RegistrationForm
 from MOCKDBHELPER import MockDBHelper as DBHelper
 from PASSWORDHELPER import PasswordHelper
 from BITlYHELPER import BitlyHelper
@@ -23,7 +24,8 @@ login_manager = LoginManager(app)
 
 @app.route('/')
 def home():
-    return render_template('home.html')
+    registrationform = RegistrationForm()
+    return render_template('home.html',registrationform=registrationform)
 
 
 @app.route('/account')
