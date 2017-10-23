@@ -27,16 +27,16 @@
       <div class="collapse navbar-collapse" id="navbarsExampleDefault">
         <ul class="navbar-nav mr-auto">
           <li class="nav-item active">
-            <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+            <a class="nav-link" href="#" hidden>Home <span class="sr-only">(current)</span></a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#">Link</a>
+            <a class="nav-link" href="#" hidden>Link</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link disabled" href="#">Disabled</a>
+            <a class="nav-link disabled" href="#" hidden>Disabled</a>
           </li>
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="http://example.com" id="dropdown01" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Dropdown</a>
+            <a class="nav-link dropdown-toggle" href="http://example.com" id="dropdown01" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" hidden>Dropdown</a>
             <div class="dropdown-menu" aria-labelledby="dropdown01">
               <a class="dropdown-item" href="#">Action</a>
               <a class="dropdown-item" href="#">Another action</a>
@@ -63,11 +63,11 @@
           </form>
       </div>
     </nav>
-
-    <!-- Main jumbotron for a primary marketing message or call to action -->
     {% block message %}
-        <p {% if onloadmessage %} class="alert-success">{{ onloadmessage }}<{% endif %}/p>
+        <div {% if onloadmessage %} class="alert-success">{{ onloadmessage }}<{% endif %}/div>
         {% endblock %}
+    <!-- Main jumbotron for a primary marketing message or call to action -->
+
     <div class="jumbotron">
       <div class="container">
         <h1 class="display-3">Waiter Caller</h1>
