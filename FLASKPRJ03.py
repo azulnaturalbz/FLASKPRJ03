@@ -11,11 +11,15 @@ from USER import User
 from FORMS import RegistrationForm
 from FORMS import LoginForm
 from FORMS import CreateTableForm
-from MOCKDBHELPER import MockDBHelper as DBHelper
 from PASSWORDHELPER import PasswordHelper
 from BITlYHELPER import BitlyHelper
-import CONFIG
 import datetime
+import CONFIG
+if CONFIG.test:
+    from MOCKDBHELPER import MockDBHelper as DBHelper
+else:
+    from DBHELPER import DBHelper
+
 
 app = Flask(__name__)
 app.secret_key = 'tPXJY3X37Qybz4QykV+hOyUxVQeEXf1Ao2C8upz+fGQXKsM'
@@ -23,6 +27,40 @@ DB = DBHelper()
 PH= PasswordHelper()
 BH = BitlyHelper()
 login_manager = LoginManager(app)
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    user_password = DB.get_user(user_id)
+    if user_password:
+        return User(user_id)
+
+@app.route('/login',methods=['POST'])
+def login():
+    form = LoginForm(request.form)
+    if form.validate():
+        stored_user = DB.get_user(form.loginemail.data)
+        if stored_user and PH.validate_password(form.loginepassword.data,stored_user['salt'],stored_user['hashed']):
+            user = User(form.loginemail.data)
+            login_user(user,remember=True)
+            return redirect(url_for('account'))
+        form.loginemail.errors.append("Email or password invalid")
+    return render_template("home.html",loginform = form, registrationform=RegistrationForm())
+
+@app.route('/register', methods=['POST'])
+def register():
+    form = RegistrationForm(request.form)
+    if form.validate():
+        if DB.get_user(form.email.data):
+            form.email.errors.append("Email already taken please try again")
+            return render_template('home.html',registrationform=form,loginform=LoginForm())
+        salt = PH.get_salt()
+        hashed = PH.get_hash(form.password2.data + salt)
+        DB.add_user(form.email.data,salt,hashed)
+        return render_template('home.html', registrationform=form,loginform=LoginForm(),
+                               onloadmessage="Registation Successful you can now login")
+    return render_template('home.html',registrationform=form,loginform=LoginForm())
+
 
 @app.route('/')
 def home():
@@ -56,38 +94,6 @@ def dashboard_resolve():
     return redirect(url_for('dashboard'))
 
 
-@app.route('/login',methods=['POST'])
-def login():
-    form = LoginForm(request.form)
-    if form.validate():
-        stored_user = DB.get_user(form.loginemail.data)
-        if stored_user and PH.validate_password(form.loginepassword.data,stored_user['salt'],stored_user['hashed']):
-            user = User(form.loginemail.data)
-            login_user(user,remember=True)
-            return redirect(url_for('account'))
-        form.loginemail.errors.append("Email or password invalid")
-    return render_template("home.html",loginform = form, registrationform=RegistrationForm())
-
-@login_manager.user_loader
-def load_user(user_id):
-    user_password = DB.get_user(user_id)
-    if user_password:
-        return User(user_id)
-
-@app.route('/register', methods=['POST'])
-def register():
-    form = RegistrationForm(request.form)
-    if form.validate():
-        if DB.get_user(form.email.data):
-            form.email.errors.append("Email already taken please try again")
-            return render_template('home.html',registrationform=form,loginform=LoginForm())
-        salt = PH.get_salt()
-        hashed = PH.get_hash(form.password2.data + salt)
-        DB.add_user(form.email.data,salt,hashed)
-        return render_template('home.html', registrationform=form,loginform=LoginForm(),
-                               onloadmessage="Registation Successful you can now login")
-    return render_template('home.html',registrationform=form,loginform=LoginForm())
-
 
 @app.route("/account/createtable", methods=["POST"])
 @login_required
@@ -95,7 +101,7 @@ def account_createtable():
     form = CreateTableForm(request.form)
     if form.validate():
         tableid = DB.add_table(form.table_number.data,current_user.get_id())
-        new_url = BH.shorten_url(CONFIG.base_url + "newrequest/" + tableid)
+        new_url = BH.shorten_url(CONFIG.base_url + "newrequest/" + str(tableid))
         DB.update_table(tableid, new_url)
         return redirect(url_for('account'))
     return render_template("accounts.html",createtableform=form,tables=DB.get_table(current_user.get_id()))
@@ -110,8 +116,9 @@ def account_deletetable():
 
 @app.route("/newrequest/<tid>")
 def new_request(tid):
-    DB.add_request(tid,datetime.datetime.now())
-    return "Your request will be attended shortly"
+    if DB.add_request(tid, datetime.datetime.now()):
+        return "Your request has been logged and a waiter will be with you shortly"
+    return "There is already a request pending for this table. Please be patient, a waiter will be there ASAP"
 
 
 @app.route('/logout')
